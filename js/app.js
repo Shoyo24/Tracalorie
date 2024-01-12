@@ -1,114 +1,91 @@
-// App Object
+// Make filter method in app class
+
 class App {
     constructor() {
         this.calorieTracker = new CalorieTracker();
 
-        // Events
+        // Event Listeners
         document.getElementById('meal-form').addEventListener('submit', this._newItem.bind(this, 'meal'));
-
-        document.getElementById('workout-form').addEventListener('submit', this._newItem.bind(this, 'workout'));
         
-        document.getElementById('limit-form').addEventListener('submit', this._setLimit.bind(this));
+        document.getElementById('workout-form').addEventListener('submit', this._newItem.bind(this, 'workout'));
 
-        document.getElementById('reset').addEventListener('click', this._reset.bind(this));
-
-        document.getElementById('meal-items').addEventListener('click', this._removeItem.bind(this));
-
-        document.getElementById('workout-items').addEventListener('click', this._removeItem.bind(this));
+        document.getElementById('limit-form').addEventListener('submit', this._setLimit.bind(this))    
+    
+        document.getElementById('reset').addEventListener('click', this._resetDay.bind(this));
     }
 
-    // Private Methods
     _newItem(type, e) {
         e.preventDefault();
 
         const itemName = document.getElementById(`${type}-name`);
         const itemCalories = document.getElementById(`${type}-calories`);
         const itemList = document.getElementById(`${type}-items`);
-        
+
         // Validate
-        if(itemName.value === '' || itemCalories.value === '') {
-            alert('Please fill in all fields');
+        if(itemName.value === '' || itemCalories === '') {
+            alert('Please fill in all fields.');
             return;
         }
 
-        // Type Check
+        // Type check
         if(type === 'meal') {
-            const meal = new Meal(itemName.value, parseFloat(itemCalories.value));
-            this.calorieTracker.addMeal(meal);
-            itemList.appendChild(this._newCard('meal', itemName.value, itemCalories.value));
+            const mealObject = new Meal(itemName.value, parseFloat(itemCalories.value));
+            this.calorieTracker.addMeal(mealObject);
+            itemList.appendChild(this._newListItem(itemName.value, itemCalories.value, type));
         }else {
-            const workout = new Workout(itemName.value, parseFloat(itemCalories.value));
-            this.calorieTracker.addWorkout(workout);
-            itemList.appendChild(this._newCard('workout', itemName.value, itemCalories.value));
+            const workoutObject = new Workout(itemName.value, parseFloat(itemCalories.value));
+            this.calorieTracker.addWorkout(workoutObject);
+            itemList.appendChild(this._newListItem(itemName.value, itemCalories.value, type));
         }
 
-        // Reset Inputs
+        // Reset Input
         itemName.value = '';
         itemCalories.value = '';
     }
 
-    _newCard(type, name, calories) {
-        const newItemCard = document.createElement('div');
-        newItemCard.classList = 'card my-2';
+    _newListItem(itemName, itemCalorie, type) {
+        const cardDiv = document.createElement('div');
+        const cardColor = (type === 'meal') ? 'bg-primary' : 'bg-secondary';        
 
-        const bgColorClass = (type === 'meal') ? 'bg-primary' : 'bg-secondary';
-
-        newItemCard.innerHTML = 
+        cardDiv.classList = 'card my-2';
+        cardDiv.innerHTML = 
         `
         <div class="card-body">
             <div class="d-flex align-items-center justify-content-between">
-                <h4 class="mx-1">${name}</h4>
-                <div class="fs-1 ${bgColorClass} text-white text-center rounded-2 px-2 px-sm-5">${calories}</div>
-                <button class="delete btn btn-danger btn-sm mx-2">
-                <i class="fa-solid fa-xmark"></i>
-                </button>
+                <h4 class="mx-1">${itemName}</h4>
+                <div class="fs-1 ${cardColor} text-white text-center rounded-2 px-2 px-sm-5">${itemCalorie}</div>
+                <button class="delete btn btn-danger btn-sm mx-2"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
-        `     
+        `
 
-        return newItemCard;
-    };
-
-    _removeItem(e) {
-        if(e.target.classList.contains('delete') || e.target.classList.contains('fa-solid')) {
-            const cardToDelete = e.target.closest('.card');
-            cardToDelete.remove();
-        }
+        return cardDiv;
     }
-
+    
     _setLimit(e) {
         e.preventDefault();
 
-        const limitInput = document.getElementById('limit');
+        const limitEl = document.getElementById('limit');
 
-        // Validate
-        if(limitInput.value === '' || limitInput.value === '0') {
-            alert('Please enter new calorie limit');
-            return;
-        }else {
-            this.calorieTracker.calorieLimit = parseFloat(limitInput.value);
-            this.calorieTracker._render();
-        }
+        this.calorieTracker.calorieLimit = limitEl.value;
+        this.calorieTracker._displayCalorieLimit();
+        this.calorieTracker._displayCaloriesRemaining();
+        
+        // Reset Input
+        limitEl.value = '';
     }
 
-    _reset(e) {
-        e.preventDefault();
-
-        document.getElementById('meal-items').innerHTML = '';
-        document.getElementById('workout-items').innerHTML = '';
-
-        this.calorieTracker.totalCalorie = 0;
+    _resetDay() {
         this.calorieTracker.calorieLimit = 0;
+        this.calorieTracker.totalCalorie = 0;
         this.calorieTracker._meals = [];
         this.calorieTracker._workouts = [];
-    
-        // Update DOM
+
         this.calorieTracker._render();
     }
 }
 
-
-// Calorie Tracker
+//  BLUEPRINT
 class CalorieTracker {
     constructor() {
         this.totalCalorie = 0;
@@ -116,11 +93,12 @@ class CalorieTracker {
         this._meals = [];
         this._workouts = [];
 
+        // Load DOM
+        this._displayTotalCalorie();
         this._displayCalorieLimit();
         this._displayCaloriesRemaining();
-        this._displayTotalCalorie();
         this._displayCaloriesConsumed();
-        this._displayCalorieBurned();        
+        this._displayCaloriesBurned();
         this._displayProgressBar();
     }
 
@@ -138,12 +116,12 @@ class CalorieTracker {
     }
 
     // Private Methods
-    _displayCalorieLimit() {
-        document.getElementById('calories-limit').innerHTML = this.calorieLimit;
-    }
-
     _displayTotalCalorie() {
         document.getElementById('calories-total').innerHTML = this.totalCalorie;
+    }
+
+    _displayCalorieLimit() {
+        document.getElementById('calories-limit').innerHTML = this.calorieLimit;
     }
 
     _displayCaloriesRemaining() {
@@ -155,30 +133,26 @@ class CalorieTracker {
         document.getElementById('calories-consumed').innerHTML = consumed;
     }
 
-    _displayCalorieBurned() {
+    _displayCaloriesBurned() {
         const burned = this._workouts.reduce((total, workout) => total + workout.calorie, 0);
         document.getElementById('calories-burned').innerHTML = burned;
     }
 
     _displayProgressBar() {
-        const progressBarEl = document.getElementById('calorie-progress');
-        const percentage = (this.totalCalorie / this.calorieLimit) * 100;
-        const width = Math.min(percentage, 100);
-
-        progressBarEl.style.width = `${width}%`;
+        const width = Math.min(((this.totalCalorie / this.calorieLimit) * 100), 100);
+        document.getElementById('calorie-progress').style.width = `${width}%`;
     }
 
     _render() {
+        this._displayTotalCalorie();
         this._displayCalorieLimit();
         this._displayCaloriesRemaining();
-        this._displayTotalCalorie();
         this._displayCaloriesConsumed();
-        this._displayCalorieBurned();
+        this._displayCaloriesBurned();
         this._displayProgressBar();
     }
 }
 
-// Meal Object
 class Meal {
     constructor(name, calorie) {
         this.name = name;
@@ -186,7 +160,6 @@ class Meal {
     }
 }
 
-// Workout Object
 class Workout {
     constructor(name, calorie) {
         this.name = name;
@@ -194,4 +167,4 @@ class Workout {
     }
 }
 
-const newApp = new App();
+const app = new App();

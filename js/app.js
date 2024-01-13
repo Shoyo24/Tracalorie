@@ -1,5 +1,3 @@
-// Make filter method in app class
-
 class App {
     constructor() {
         this.calorieTracker = new CalorieTracker();
@@ -9,9 +7,11 @@ class App {
         
         document.getElementById('workout-form').addEventListener('submit', this._newItem.bind(this, 'workout'));
 
-        document.getElementById('limit-form').addEventListener('submit', this._setLimit.bind(this))    
+        document.getElementById('limit-form').addEventListener('submit', this._setLimit.bind(this));
     
         document.getElementById('reset').addEventListener('click', this._resetDay.bind(this));
+
+        document.getElementById('meal-items').addEventListener('click', this._removeItem.bind(this, 'meal'));
     }
 
     _newItem(type, e) {
@@ -22,7 +22,7 @@ class App {
         const itemList = document.getElementById(`${type}-items`);
 
         // Validate
-        if(itemName.value === '' || itemCalories === '') {
+        if(itemName.value === '' || itemCalories.value === '') {
             alert('Please fill in all fields.');
             return;
         }
@@ -82,6 +82,17 @@ class App {
         this.calorieTracker._workouts = [];
 
         this.calorieTracker._render();
+    }
+
+    _removeItem(type, e) {
+        if(e.target.classList.contains('delete') || e.target.classList.contains('fa-xmark')){
+            const id = e.target.closest('.card');
+            
+
+            // type === 'meal' ? 
+            // this.calorieTracker.removeMeal() : 
+            // this.calorieTracker.removeWorkout();
+        }
     }
 }
 
